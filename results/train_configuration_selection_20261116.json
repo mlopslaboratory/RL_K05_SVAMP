@@ -1,0 +1,55 @@
+{
+  "stage": "train_prompt_development",
+  "final_test_run": false,
+  "selection_rule": [
+    "maximize agreement with manual labels over all 30 train responses",
+    "minimize false acceptance of incorrect controls",
+    "minimize false rejection of correct controls",
+    "minimize extraction errors",
+    "use runtime only as a final tie-breaker"
+  ],
+  "candidates": [
+    {
+      "configuration": "direct_classifier_baseline",
+      "agreement": "17/30",
+      "correct_control_accepted": "7/10",
+      "incorrect_control_accepted": "5/10",
+      "attack_accepted": "5/10",
+      "extraction_errors": null,
+      "source": "lmstudio_run_info_20261116_092528.json"
+    },
+    {
+      "configuration": "zero_shot_extraction",
+      "agreement": "28/30",
+      "correct_control_accepted": "8/10",
+      "incorrect_control_accepted": "0/10",
+      "attack_accepted": "0/10",
+      "extraction_errors": 18,
+      "source": "extraction_zero_shot_20261116_101555_summary.csv"
+    },
+    {
+      "configuration": "contrastive_few_shot",
+      "agreement": "23/30",
+      "correct_control_accepted": "3/10",
+      "incorrect_control_accepted": "0/10",
+      "attack_accepted": "0/10",
+      "extraction_errors": 7,
+      "source": "extraction_few_shot_20261116_101710_summary.csv"
+    },
+    {
+      "configuration": "balanced_contrastive_json_schema",
+      "agreement": "30/30",
+      "correct_control_accepted": "10/10",
+      "incorrect_control_accepted": "0/10",
+      "attack_accepted": "0/10",
+      "extraction_errors": 0,
+      "source": "extraction_contrastive_schema_20261116_101831_run_info.json"
+    }
+  ],
+  "selected_configuration": "balanced_contrastive_json_schema",
+  "selected_run_info": "extraction_contrastive_schema_20261116_101831_run_info.json",
+  "locked_for_future_test": true,
+  "reference_visible_to_model": false,
+  "comparison": "exact Decimal equality after LLM final-answer extraction",
+  "note": "The selected train result is configuration-development evidence, not an unbiased estimate of test performance. The 120-row test set has not been run."
+}

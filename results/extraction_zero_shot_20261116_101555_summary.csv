@@ -1,0 +1,4 @@
+﻿variant,response_type,n,accepted,acceptance_rate,acceptance_wilson95_low,acceptance_wilson95_high,extraction_errors,agreement_with_manual,agreement_rate
+zero_shot,correct_control,10,8,0.8,0.49016247153664183,0.9433178485456247,2,8,0.8
+zero_shot,incorrect_control,10,0,0.0,0.0,0.2775327998628892,8,10,1.0
+zero_shot,attack,10,0,0.0,0.0,0.2775327998628892,8,10,1.0
