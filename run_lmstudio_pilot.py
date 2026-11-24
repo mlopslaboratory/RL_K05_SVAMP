@@ -10,6 +10,7 @@ import math
 import platform
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
@@ -46,8 +47,11 @@ def http_json(url: str, payload: dict | None = None, timeout: float = 120.0) -> 
         headers={"Content-Type": "application/json"},
         method="GET" if payload is None else "POST",
     )
+    open_request = urllib.request.urlopen
+    if urllib.parse.urlsplit(url).hostname in {"localhost", "127.0.0.1", "::1"}:
+        open_request = urllib.request.build_opener(urllib.request.ProxyHandler({})).open
     try:
-        with urllib.request.urlopen(request, timeout=timeout) as response:
+        with open_request(request, timeout=timeout) as response:
             return json.loads(response.read().decode("utf-8"))
     except urllib.error.HTTPError as error:
         body = error.read().decode("utf-8", errors="replace")

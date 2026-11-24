@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import csv
 import json
 import platform
 import re
@@ -13,7 +12,14 @@ from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
-from run_lmstudio_pilot import http_json, read_rows, sha256_file, wilson_interval
+from run_lmstudio_pilot import http_json, read_rows, sha256_file, wilson_interval, write_csv
+
+
+MODEL_ID = "qwen2.5-0.5b-instruct-q4km"
+MODEL_FILE = "qwen2.5-0.5b-instruct-q4_k_m.gguf"
+MODEL_SHA256 = "74a4da8c9fdbcd15bd1f6d01d621410d31c6fc00986f5eb687824e7b93d7a9db"
+DECODING = {"temperature": 0, "top_p": 1, "max_tokens": 32, "seed": 42}
+USER_TEMPLATE = "Question: {Question}\nStudent response: {response_text}"
 
 
 SYSTEM_PROMPT = (
@@ -110,7 +116,7 @@ def build_messages(row: dict[str, str], variant: str) -> list[dict[str, str]]:
     messages.append(
         {
             "role": "user",
-            "content": f"Question: {row['Question']}\nStudent response: {row['response_text']}",
+            "content": USER_TEMPLATE.format(**row),
         }
     )
     return messages
@@ -132,6 +138,20 @@ def normalize_number(value: object) -> Decimal:
 
 
 def parse_extraction(raw: str) -> tuple[str, str]:
+    try:
+        # Preserve repeated keys and distinguish objects from JSON arrays.
+        fields = json.loads(raw.strip(), object_pairs_hook=tuple)
+        if not isinstance(fields, tuple) or len(fields) != 1:
+            return "", "format_error"
+        key, value = fields[0]
+        if key != "final_answer" or not isinstance(value, str):
+            return "", "format_error"
+        return format(normalize_number(value), "f"), "ok"
+    except (ValueError, RecursionError):
+        return "", "format_error"
+
+
+def parse_legacy_extraction(raw: str) -> tuple[str, str]:
     text = raw.strip()
     if text.startswith("```") and text.endswith("```"):
         text = re.sub(r"^```(?:json)?\s*|\s*```$", "", text, flags=re.IGNORECASE)
@@ -148,13 +168,6 @@ def parse_extraction(raw: str) -> tuple[str, str]:
         return "", "format_error"
 
 
-def write_csv(path: Path, records: list[dict]) -> None:
-    with path.open("w", encoding="utf-8-sig", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(records[0]))
-        writer.writeheader()
-        writer.writerows(records)
-
-
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -163,8 +176,11 @@ def main() -> int:
         required=True,
     )
     parser.add_argument("--base-url", default="http://127.0.0.1:1234/v1")
-    parser.add_argument("--model", default="qwen2.5-0.5b-instruct-q4km")
+    parser.add_argument("--model", default=MODEL_ID)
     parser.add_argument("--model-file", type=Path, required=True)
+    parser.add_argument("--device", choices=["CPU"], help="Device configured in LM Studio")
+    parser.add_argument("--context-length", type=int, help="Context configured in LM Studio")
+    parser.add_argument("--parallel", type=int, help="Parallel slots configured in LM Studio")
     parser.add_argument("--data", type=Path, default=Path("pilot_examples.csv"))
     parser.add_argument("--output-dir", type=Path, default=Path("results"))
     parser.add_argument("--timeout", type=float, default=120.0)
@@ -173,21 +189,25 @@ def main() -> int:
     rows = read_rows(args.data)
     if not args.model_file.is_file():
         raise RuntimeError(f"Model file does not exist: {args.model_file}")
-    available = http_json(f"{args.base_url.rstrip('/')}/models", timeout=10)
+    model_hash = sha256_file(args.model_file)
+    if args.variant == "contrastive_schema" and model_hash != MODEL_SHA256:
+        raise RuntimeError(f"Selected configuration requires {MODEL_FILE} with SHA-256 {MODEL_SHA256}")
+    try:
+        available = http_json(f"{args.base_url.rstrip('/')}/models", timeout=10)
+    except OSError as error:
+        parser.error(f"Cannot connect to {args.base_url}: {error}. Start LM Studio as described in README.md.")
     model_ids = [item["id"] for item in available.get("data", [])]
     if args.model not in model_ids:
         raise RuntimeError(f"Model {args.model!r} is not loaded. Available: {model_ids}")
 
+    parse_output = parse_extraction if args.variant == "contrastive_schema" else parse_legacy_extraction
     records: list[dict] = []
     started = time.perf_counter()
     for index, row in enumerate(rows, 1):
         payload = {
             "model": args.model,
             "messages": build_messages(row, args.variant),
-            "temperature": 0,
-            "top_p": 1,
-            "max_tokens": 32,
-            "seed": 42,
+            **DECODING,
             "stream": False,
         }
         if args.variant == "contrastive_schema":
@@ -200,7 +220,7 @@ def main() -> int:
         )
         seconds = time.perf_counter() - item_started
         raw = response["choices"][0]["message"].get("content") or ""
-        extracted, extraction_status = parse_extraction(raw)
+        extracted, extraction_status = parse_output(raw)
         reference = normalize_number(row["Answer"])
         accepted = extraction_status == "ok" and normalize_number(extracted) == reference
         predicted_label = "correct" if accepted else "incorrect"
@@ -276,8 +296,16 @@ def main() -> int:
         "timestamp_utc": datetime.now(timezone.utc).isoformat(),
         "model_id": args.model,
         "model_file": args.model_file.name,
-        "model_file_sha256": sha256_file(args.model_file),
+        "model_file_sha256": model_hash,
+        "model_file_size_bytes": args.model_file.stat().st_size,
         "quantization": "Q4_K_M",
+        "base_url": args.base_url,
+        "backend": "LM Studio OpenAI-compatible API",
+        "reported_server_settings": {
+            "device": args.device,
+            "context_length": args.context_length,
+            "parallel": args.parallel,
+        },
         "data_file": args.data.name,
         "data_sha256": sha256_file(args.data),
         "n_verdicts": len(records),
@@ -286,8 +314,9 @@ def main() -> int:
         "seconds_per_verdict": round(total_seconds / len(records), 3),
         "python": platform.python_version(),
         "platform": platform.platform(),
-        "decoding": {"temperature": 0, "top_p": 1, "max_tokens": 32, "seed": 42},
+        "decoding": DECODING,
         "system_prompt": build_messages(rows[0], args.variant)[0]["content"],
+        "user_template": USER_TEMPLATE,
         "few_shot_examples": (
             FEW_SHOT_EXAMPLES
             if args.variant == "few_shot"

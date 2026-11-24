@@ -1,0 +1,215 @@
+{
+  "stage": "train_pilot",
+  "final_test_run": false,
+  "selected_configuration": "balanced_contrastive_json_schema",
+  "sources": {
+    "selection": "train_configuration_selection_20261116.json",
+    "evaluator": "extraction_contrastive_schema_20261116_101831_run_info.json",
+    "direct_classifier": "lmstudio_run_info_20261116_092528.json"
+  },
+  "n_train_tasks": 10,
+  "n_train_responses": 30,
+  "n_matching_response_texts": 30,
+  "n_consensus_labels": 30,
+  "issues_for_review": [],
+  "human_agreement": {
+    "count": 30,
+    "n": 30,
+    "rate": 1.0,
+    "wilson_95": [
+      0.8864866068260312,
+      0.9999999999999999
+    ],
+    "cohen_kappa": 1.0,
+    "confusion_olga_by_dilyara": {
+      "correct": {
+        "correct": 10,
+        "incorrect": 0
+      },
+      "incorrect": {
+        "correct": 0,
+        "incorrect": 20
+      }
+    }
+  },
+  "metrics": {
+    "evaluator": {
+      "agreement": {
+        "count": 30,
+        "n": 30,
+        "rate": 1.0,
+        "wilson_95": [
+          0.8864866068260312,
+          0.9999999999999999
+        ]
+      },
+      "false_rejection": {
+        "count": 0,
+        "n": 10,
+        "rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.2775327998628892
+        ]
+      },
+      "extraction_or_format_error": {
+        "count": 0,
+        "n": 30,
+        "rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.11351339317396876
+        ]
+      },
+      "false_acceptance_incorrect_control": {
+        "count": 0,
+        "n": 10,
+        "rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.2775327998628892
+        ]
+      },
+      "false_acceptance_attack": {
+        "count": 0,
+        "n": 10,
+        "rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.2775327998628892
+        ]
+      }
+    },
+    "baseline": {
+      "agreement": {
+        "count": 30,
+        "n": 30,
+        "rate": 1.0,
+        "wilson_95": [
+          0.8864866068260312,
+          0.9999999999999999
+        ]
+      },
+      "false_rejection": {
+        "count": 0,
+        "n": 10,
+        "rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.2775327998628892
+        ]
+      },
+      "extraction_or_format_error": {
+        "count": 0,
+        "n": 30,
+        "rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.11351339317396876
+        ]
+      },
+      "false_acceptance_incorrect_control": {
+        "count": 0,
+        "n": 10,
+        "rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.2775327998628892
+        ]
+      },
+      "false_acceptance_attack": {
+        "count": 0,
+        "n": 10,
+        "rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.2775327998628892
+        ]
+      }
+    },
+    "direct_classifier": {
+      "agreement": {
+        "count": 17,
+        "n": 30,
+        "rate": 0.5666666666666667,
+        "wilson_95": [
+          0.3919730700081361,
+          0.7262251442353347
+        ]
+      },
+      "false_rejection": {
+        "count": 3,
+        "n": 10,
+        "rate": 0.3,
+        "wilson_95": [
+          0.10779126740630099,
+          0.6032218525388546
+        ]
+      },
+      "extraction_or_format_error": {
+        "count": 0,
+        "n": 30,
+        "rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.11351339317396876
+        ]
+      },
+      "false_acceptance_incorrect_control": {
+        "count": 5,
+        "n": 10,
+        "rate": 0.5,
+        "wilson_95": [
+          0.236593090512564,
+          0.7634069094874361
+        ]
+      },
+      "false_acceptance_attack": {
+        "count": 5,
+        "n": 10,
+        "rate": 0.5,
+        "wilson_95": [
+          0.236593090512564,
+          0.7634069094874361
+        ]
+      }
+    }
+  },
+  "paired_attack_vs_incorrect_control": {
+    "evaluator": {
+      "n_pairs": 10,
+      "control_rejected_attack_accepted": 0,
+      "control_rejected_attack_accepted_task_ids": [],
+      "control_accepted_attack_rejected": 0,
+      "control_accepted_attack_rejected_task_ids": [],
+      "attack_minus_control_percentage_points": 0.0,
+      "mcnemar_exact_two_sided_p": 1.0
+    },
+    "baseline": {
+      "n_pairs": 10,
+      "control_rejected_attack_accepted": 0,
+      "control_rejected_attack_accepted_task_ids": [],
+      "control_accepted_attack_rejected": 0,
+      "control_accepted_attack_rejected_task_ids": [],
+      "attack_minus_control_percentage_points": 0.0,
+      "mcnemar_exact_two_sided_p": 1.0
+    },
+    "direct_classifier": {
+      "n_pairs": 10,
+      "control_rejected_attack_accepted": 0,
+      "control_rejected_attack_accepted_task_ids": [],
+      "control_accepted_attack_rejected": 0,
+      "control_accepted_attack_rejected_task_ids": [],
+      "attack_minus_control_percentage_points": 0.0,
+      "mcnemar_exact_two_sided_p": 1.0
+    }
+  },
+  "checks": {
+    "data_sha256_for_archived_runs": "92b4d22ca1d91f6c308e97b42b080780f2f6cbceb198e4a3beeaf5003093d319",
+    "selected_run_matches_prompt_examples_schema_and_decoding": true,
+    "selected_run_model_file": "qwen2.5-0.5b-instruct-q4_k_m.gguf",
+    "selected_run_model_file_sha256": "74a4da8c9fdbcd15bd1f6d01d621410d31c6fc00986f5eb687824e7b93d7a9db",
+    "archived_verdicts_recomputed_from_raw_outputs": 60,
+    "archived_selected_inference_seconds": 11.219
+  }
+}
